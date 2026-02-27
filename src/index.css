@@ -1,0 +1,281 @@
+@import "tailwindcss";
+
+@theme {
+  --color-sand-light: #FAF7F2;
+  --color-sand-mid: #F0E8D8;
+  --color-sand-dark: #E0D0B8;
+  --color-amber: #C07840;
+  --color-amber-dark: #8B5A28;
+  --color-amber-dim: #D4A070;
+  --color-earth: #6B4E36;
+  --color-charcoal: #2A1E14;
+  --color-text-primary: #1E140A;
+  --color-text-muted: #7A5C44;
+  --color-border: rgba(160, 110, 70, 0.18);
+
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+@layer base {
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: #FAF7F2;
+    color: #1E140A;
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #F0E8D8;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #C07840;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #8B5A28;
+  }
+}
+
+/* ── Landing hero bg ───────────────────────────────────────── */
+.hero-bg {
+  background-image: url('/hero-bg.png');
+  background-size: cover;
+  background-position: center 30%;
+  background-repeat: no-repeat;
+}
+
+/* ── Grain (very subtle on light) ─────────────────────────── */
+.film-grain::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+  z-index: 9999;
+  animation: grain 0.6s steps(1) infinite;
+}
+
+@keyframes grain {
+
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+
+  20% {
+    transform: translate(2%, 1%);
+  }
+
+  40% {
+    transform: translate(-1%, 2%);
+  }
+
+  60% {
+    transform: translate(1%, -1%);
+  }
+
+  80% {
+    transform: translate(-2%, 1%);
+  }
+}
+
+/* ── Gold/amber shimmer ────────────────────────────────────── */
+.shimmer-text {
+  background: linear-gradient(90deg, #C07840 0%, #E8B870 40%, #C07840 60%, #8B5A28 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 3.5s linear infinite;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: -200% center;
+  }
+
+  to {
+    background-position: 200% center;
+  }
+}
+
+/* ── CTA button ────────────────────────────────────────────── */
+.cta-button {
+  background: rgba(30, 20, 10, 0.75);
+  border: 1px solid rgba(200, 150, 90, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(192, 120, 64, 0.25);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.cta-button:hover {
+  transform: scale(1.04);
+  box-shadow: 0 0 32px rgba(192, 120, 64, 0.4), 0 8px 32px rgba(0, 0, 0, 0.35);
+  border-color: rgba(212, 160, 112, 0.8);
+}
+
+.cta-button:hover::before {
+  opacity: 1;
+}
+
+.cta-button span {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Fade to black ─────────────────────────────────────────── */
+@keyframes fadeToBlack {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.fade-to-black {
+  animation: fadeToBlack 0.8s ease forwards;
+}
+
+/* ── Light surface card ────────────────────────────────────── */
+.light-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(160, 110, 70, 0.14);
+  border-radius: 12px;
+  transition: all 0.25s ease;
+}
+
+.light-card:hover {
+  border-color: rgba(192, 120, 64, 0.35);
+  box-shadow: 0 6px 28px rgba(140, 90, 40, 0.1);
+  transform: translateY(-2px);
+}
+
+/* ── Sidebar nav active ────────────────────────────────────── */
+.nav-active {
+  background: linear-gradient(90deg, rgba(192, 120, 64, 0.12) 0%, transparent 100%);
+  border-left: 2px solid #C07840;
+  color: #8B5A28;
+}
+
+/* ── Script editor ─────────────────────────────────────────── */
+.script-editor {
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.9;
+  color: #2A1E14;
+  background: transparent;
+  border: none;
+  resize: none;
+  outline: none;
+  caret-color: #C07840;
+}
+
+/* ── Shot card ─────────────────────────────────────────────── */
+.shot-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(160, 110, 70, 0.18);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.shot-card:hover {
+  border-color: rgba(192, 120, 64, 0.5);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 36px rgba(140, 90, 40, 0.14);
+}
+
+/* ── Toolbar button ────────────────────────────────────────── */
+.toolbar-btn {
+  background: #FFFFFF;
+  border: 1px solid rgba(160, 110, 70, 0.2);
+  color: #4A3828;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.toolbar-btn:hover {
+  border-color: #C07840;
+  color: #8B5A28;
+  background: #FDF5EC;
+}
+
+/* ── Float anim ────────────────────────────────────────────── */
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.float-anim {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* ── Page fade-in ──────────────────────────────────────────── */
+@keyframes pageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-in {
+  animation: pageFadeIn 0.4s ease forwards;
+}
+
+/* ── Loader spin ───────────────────────────────────────────── */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}

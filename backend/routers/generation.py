@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException, Request, status, BackgroundTasks
 
 from models.generation import StoryInput, GenerationResult
 from services.llm_service import generate_production, edit_script
-from services.db_service import save_generation, get_latest_generation, get_project, get_project_generations
+from services.db_service import save_generation, get_latest_generation, get_project, get_project_generations, update_generation_screenplay
 from pydantic import BaseModel
 from typing import Optional, List
 
@@ -171,3 +171,18 @@ async def storyboard(body: StoryboardInput, request: Request):
     from services.llm_service import generate_storyboard_prompts
     panels = await generate_storyboard_prompts(body.shot_design)
     return panels
+
+
+# ── Save screenplay ──────────────────────────────────────────
+class ScreenplayUpdate(BaseModel):
+    screenplay: str
+
+
+@router.put("/{generation_id}/screenplay")
+async def save_screenplay(generation_id: str, body: ScreenplayUpdate, request: Request):
+    """Overwrite the screenplay text of an existing generation."""
+    _user_id(request)
+    updated = update_generation_screenplay(generation_id, body.screenplay)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Generation not found.")
+    return {"status": "ok", "id": updated.get("id")}

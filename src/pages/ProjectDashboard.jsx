@@ -174,8 +174,7 @@ export default function ProjectDashboard() {
 
     const handleLoad = (gen) => {
         openProject(projectId)
-        setGeneration(gen)
-        navigate('/studio')
+        navigate('/studio', { state: { loadGeneration: gen } })
     }
 
     // Stats

@@ -127,3 +127,8 @@ export async function apiDeleteCallSheetEntry(entryId) {
 export async function apiGenerateStoryboard(shotDesign) {
     return request('POST', '/generate/storyboard', { shot_design: shotDesign })
 }
+
+// ── Screenplay Save ──────────────────────────────────────────
+export async function apiSaveScreenplay(generationId, screenplay) {
+    return request('PUT', `/generate/${generationId}/screenplay`, { screenplay })
+}

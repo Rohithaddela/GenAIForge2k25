@@ -110,6 +110,7 @@ const useCineStore = create((set, get) => ({
                 }))
                 return {
                     ...p,
+                    generationId: gen.id || null,
                     script: gen.screenplay || '',
                     scenes,
                     shotBreakdown: (gen.shot_design || []).map((g) => ({

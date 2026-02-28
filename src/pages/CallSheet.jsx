@@ -392,15 +392,49 @@ export default function CallSheet() {
         }
     }
 
-    // Find best date: date occurring most often across cast
+    // Find ALL common dates: dates where 2+ people are free
     const dateCounts = {}
     entries.forEach((e) => {
         (e.available_dates || []).forEach((d) => {
             if (isFuture(d)) dateCounts[d] = (dateCounts[d] || 0) + 1
         })
     })
-    const sortedDates = Object.entries(dateCounts).sort((a, b) => b[1] - a[1])
-    const bestDate = sortedDates[0]
+    // All dates where at least 2 people are free, sorted by date
+    const commonDates = Object.entries(dateCounts)
+        .filter(([, count]) => count >= 2)
+        .sort((a, b) => a[0].localeCompare(b[0]))
+
+    // Group consecutive dates into ranges
+    function groupIntoRanges(dates) {
+        if (dates.length === 0) return []
+        const ranges = []
+        let rangeStart = dates[0]
+        let rangePrev = dates[0]
+        let rangeMinCount = dates[0][1]
+
+        for (let i = 1; i < dates.length; i++) {
+            const prevDate = new Date(rangePrev[0] + 'T00:00:00')
+            const currDate = new Date(dates[i][0] + 'T00:00:00')
+            const diffDays = (currDate - prevDate) / (1000 * 60 * 60 * 24)
+
+            if (diffDays === 1) {
+                rangePrev = dates[i]
+                rangeMinCount = Math.min(rangeMinCount, dates[i][1])
+            } else {
+                ranges.push({ start: rangeStart, end: rangePrev, minCount: rangeMinCount })
+                rangeStart = dates[i]
+                rangePrev = dates[i]
+                rangeMinCount = dates[i][1]
+            }
+        }
+        ranges.push({ start: rangeStart, end: rangePrev, minCount: rangeMinCount })
+        return ranges
+    }
+
+    const dateRanges = groupIntoRanges(commonDates)
+    const bestDate = commonDates.length > 0
+        ? [...commonDates].sort((a, b) => b[1] - a[1])[0]
+        : null
 
     return (
         <div className="page-in" style={{ display: 'flex', minHeight: '100vh', background: '#F5EFE5' }}>
@@ -423,7 +457,7 @@ export default function CallSheet() {
                 </div>
 
                 {/* Summary stats */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px,1fr))', gap: 14, marginBottom: 24 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px,1fr))', gap: 14, marginBottom: 14 }}>
                     <div style={{
                         background: '#FFFFFF', borderRadius: 12,
                         border: '1px solid rgba(160,110,70,0.12)',
@@ -471,6 +505,139 @@ export default function CallSheet() {
                         </div>
                     )}
                 </div>
+
+                {/* ── Common Availability Panel ─────────────────── */}
+                {commonDates.length > 0 && (
+                    <div style={{
+                        background: '#FFFFFF', borderRadius: 14,
+                        border: '1px solid rgba(160,110,70,0.12)',
+                        padding: '20px 24px', marginBottom: 24,
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                            <Calendar size={15} color="#C07840" />
+                            <span style={{ fontSize: 13, fontWeight: 700, color: '#2A1E14' }}>
+                                Common Availability
+                            </span>
+                            <span style={{
+                                padding: '2px 8px', borderRadius: 6,
+                                background: 'rgba(45,139,94,0.08)', border: '1px solid rgba(45,139,94,0.2)',
+                                fontSize: 10.5, fontWeight: 600, color: '#2D8B5E',
+                            }}>
+                                {commonDates.length} date{commonDates.length !== 1 ? 's' : ''} with 2+ free
+                            </span>
+                        </div>
+
+                        {/* Date ranges & individual dates */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            {dateRanges.map((range, idx) => {
+                                const isRange = range.start[0] !== range.end[0]
+                                const maxCount = Math.max(...commonDates.map(d => d[1]))
+                                // Get all individual dates in this range with their counts
+                                const rangeDates = commonDates.filter(([d]) => d >= range.start[0] && d <= range.end[0])
+
+                                return (
+                                    <div key={idx} style={{
+                                        padding: '12px 16px', borderRadius: 10,
+                                        background: range.start[0] === bestDate?.[0] || (isRange && rangeDates.some(d => d[0] === bestDate?.[0]))
+                                            ? 'rgba(45,139,94,0.04)' : '#FAF7F2',
+                                        border: range.start[0] === bestDate?.[0] || (isRange && rangeDates.some(d => d[0] === bestDate?.[0]))
+                                            ? '1px solid rgba(45,139,94,0.2)' : '1px solid rgba(160,110,70,0.06)',
+                                    }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: isRange ? 8 : 0 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                <Calendar size={12} color="#C07840" />
+                                                <span style={{ fontSize: 13, fontWeight: 600, color: '#2A1E14' }}>
+                                                    {isRange
+                                                        ? `${fmtDate(range.start[0])} — ${fmtDate(range.end[0])}`
+                                                        : `${getWeekday(range.start[0])} ${fmtDate(range.start[0])}`
+                                                    }
+                                                </span>
+                                                {isRange && (
+                                                    <span style={{
+                                                        padding: '1px 6px', borderRadius: 4,
+                                                        background: 'rgba(192,120,64,0.08)',
+                                                        fontSize: 10, fontWeight: 600, color: '#8B5A28',
+                                                    }}>
+                                                        {rangeDates.length} consecutive days
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <span style={{
+                                                padding: '3px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700,
+                                                background: range.minCount === entries.length
+                                                    ? 'rgba(45,139,94,0.12)' : 'rgba(192,120,64,0.08)',
+                                                color: range.minCount === entries.length ? '#2D8B5E' : '#8B5A28',
+                                            }}>
+                                                {isRange ? `${range.minCount}–${Math.max(...rangeDates.map(d => d[1]))}` : range.start[1]}/{entries.length} free
+                                            </span>
+                                        </div>
+
+                                        {/* Expanded breakdown for ranges */}
+                                        {isRange && (
+                                            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginLeft: 20 }}>
+                                                {rangeDates.map(([d, count]) => (
+                                                    <div key={d} style={{
+                                                        display: 'flex', alignItems: 'center', gap: 6,
+                                                        padding: '4px 10px', borderRadius: 7,
+                                                        background: count === entries.length
+                                                            ? 'rgba(45,139,94,0.08)' : 'rgba(192,120,64,0.06)',
+                                                        border: `1px solid ${count === entries.length
+                                                            ? 'rgba(45,139,94,0.2)' : 'rgba(192,120,64,0.12)'}`,
+                                                    }}>
+                                                        <span style={{
+                                                            fontSize: 10.5, fontWeight: 600,
+                                                            color: count === entries.length ? '#2D8B5E' : '#6B4E36',
+                                                        }}>
+                                                            {getWeekday(d)} {fmtDate(d)}
+                                                        </span>
+                                                        <div style={{
+                                                            width: 32, height: 4, borderRadius: 2,
+                                                            background: 'rgba(160,110,70,0.1)',
+                                                            overflow: 'hidden',
+                                                        }}>
+                                                            <div style={{
+                                                                width: `${(count / entries.length) * 100}%`,
+                                                                height: '100%', borderRadius: 2,
+                                                                background: count === entries.length
+                                                                    ? '#2D8B5E' : '#C07840',
+                                                            }} />
+                                                        </div>
+                                                        <span style={{
+                                                            fontSize: 9.5, fontWeight: 700,
+                                                            color: count === entries.length ? '#2D8B5E' : '#A07850',
+                                                        }}>
+                                                            {count}/{entries.length}
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {/* Single date: show progress bar inline */}
+                                        {!isRange && (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, marginLeft: 20 }}>
+                                                <div style={{
+                                                    flex: 1, maxWidth: 120, height: 5, borderRadius: 3,
+                                                    background: 'rgba(160,110,70,0.1)', overflow: 'hidden',
+                                                }}>
+                                                    <div style={{
+                                                        width: `${(range.start[1] / entries.length) * 100}%`,
+                                                        height: '100%', borderRadius: 3,
+                                                        background: range.start[1] === entries.length ? '#2D8B5E' : '#C07840',
+                                                        transition: 'width 0.3s ease',
+                                                    }} />
+                                                </div>
+                                                <span style={{ fontSize: 10, color: '#A07850' }}>
+                                                    {entries.filter(e => (e.available_dates || []).includes(range.start[0])).map(e => e.name).join(', ')}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </div>
+                )}
 
                 {/* Add button */}
                 <div style={{ marginBottom: 20 }}>

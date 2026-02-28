@@ -151,6 +151,17 @@ def get_project_generations(project_id: str) -> List[dict]:
     return [_serialize(doc) for doc in cursor]
 
 
+def update_generation_screenplay(generation_id: str, screenplay: str) -> Optional[dict]:
+    """Overwrite the screenplay field of an existing generation."""
+    db = get_db()
+    result = db.generations.find_one_and_update(
+        {"_id": ObjectId(generation_id)},
+        {"$set": {"screenplay": screenplay, "updated_at": datetime.now(timezone.utc)}},
+        return_document=True,
+    )
+    return _serialize(result)
+
+
 # ── Call Sheet ────────────────────────────────────────────────
 
 def create_callsheet_entry(project_id: str, data: dict) -> dict:
